@@ -27,6 +27,10 @@ ADMINS = [int(admin) if id_pattern.search(admin) else admin for admin in environ
 BOT_USERNAME = environ.get("BOT_USERNAME", "") # without @
 PORT = environ.get("PORT", "8080")
 
+OWNER_ID = int(os.environ.get("OWNER_ID", 6695586027)) #Owner user id < about display
+SUPPORT_GROUP = os.environ.get("SUPPORT_GROUP", "PhdLust") # WITHOUR @ < about display
+CHANNEL = os.environ.get("CHANNEL", "PhdLust") # WITHOUR @ < about display
+
 # Clone Info :-
 CLONE_MODE = bool(environ.get('CLONE_MODE', False)) # Set True or False
 
