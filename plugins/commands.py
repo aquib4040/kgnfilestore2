@@ -1,7 +1,6 @@
 
 
-
-
+from plugins.fsub import *
 import os
 import logging
 import random
@@ -12,8 +11,6 @@ from plugins.dbusers import db
 from pyrogram import Client, filters, enums
 from plugins.users_api import get_user, update_user_info
 from pyrogram.errors import ChatAdminRequired, FloodWait
-from pyrogram.enums import ChatMemberStatus
-from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 from pyrogram.types import *
 from utils import verify_user, check_token, check_verification, get_token
 from config import *
@@ -22,15 +19,10 @@ import json
 import base64
 from urllib.parse import quote_plus
 from TechVJ.utils.file_properties import get_name, get_hash, get_media_file_size
+
 logger = logging.getLogger(__name__)
-from plugins.cmd import *
 
 BATCH_FILES = {}
-
-
-
-
-
 
 def get_size(size):
     """Get size in readable format"""
@@ -47,44 +39,65 @@ def formate_file_name(file_name):
     chars = ["[", "]", "(", ")"]
     for c in chars:
         file_name.replace(c, "")
-    file_name = '@KGN_BOT_Z ' + ' '.join(filter(lambda x: not x.startswith('http') and not x.startswith('@') and not x.startswith('www.'), file_name.split()))
+    file_name = '@VJ_Botz ' + ' '.join(filter(lambda x: not x.startswith('http') and not x.startswith('@') and not x.startswith('www.'), file_name.split()))
     return file_name
 
 
 
-
-
-
-@Client.on_message(filters.command("start") & filters.incoming)
+@Client.on_message(filters.command("start") & filters.incoming )
 async def start(client, message):
-    username = client.me.username
     user_id = message.from_user.id
-    if not await db.is_user_exist(message.from_user.id):
+    mention = message.from_user.mention
+    username = client.me.username
+    
+    if not await db.is_user_exist(message.from_user.id): 
         await db.add_user(message.from_user.id, message.from_user.first_name)
         await client.send_message(LOG_CHANNEL, script.LOG_TEXT.format(message.from_user.id, message.from_user.mention))
-
-    # Force Subscription Verification
-    FORCE_SUB_CHANNELS = await get_force_sub_channels()
-    member_status = {ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.MEMBER}
-    for channel in FORCE_SUB_CHANNELS:
+    
+    # Check if user is in the required channels
+    force_sub_channels = await get_force_sub_channels()  # Replace with your function to get channel list.
+    not_joined_channels = []
+    
+    for channel_id in force_sub_channels:
         try:
-            user_status = await client.get_chat_member(channel['channel_id'], user_id)
-            if user_status.status not in member_status:
-                raise Exception("Not a member")
-        except:
-            buttons = [[InlineKeyboardButton("💝 JOIN REQUIRED CHANNEL", url=channel['join_link'])]]
-            await message.reply_text(
-                "<b>You must join the required channel before using this bot.</b>",
-                reply_markup=InlineKeyboardMarkup(buttons),
-                protect_content=True
-            )
-            return
+            member = await client.get_chat_member(chat_id=channel_id, user_id=user_id)
+            if member.status not in {ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.MEMBER}:
+                not_joined_channels.append(channel_id)
+        except RPCError:  # Handle errors properly
+            not_joined_channels.append(channel_id)
+        except Exception as e:
+            print(f"Error checking membership for {channel_id}: {e}")
+
+    # If the user has not joined required channels, prompt them to join
+    if not_joined_channels:
+        buttons = []
+        for channel_id in not_joined_channels:
+            try:
+                chat = await client.get_chat(channel_id)  # Get channel details
+                channel_username = chat.username
+                if channel_username:
+                    join_url = f"https://t.me/{channel_username}"
+                else:
+                    join_url = chat.invite_link  # Get invite link as fallback
+
+                buttons.append([InlineKeyboardButton(f"Join {chat.title}", url=join_url)])
+            except Exception as e:
+                print(f"Error fetching channel info for {channel_id}: {e}")
+
+        buttons.append([InlineKeyboardButton("↺ Refresh", callback_data="refresh_status")])
+
+        await message.reply_text(
+            f"𝖧𝖾𝗒 {mention}, \n𝖯𝗅𝖾𝖺𝗌𝖾 𝖩𝗈𝗂𝗇 𝗆𝗒 𝖢𝗁𝖺𝗇𝗇𝖾𝗅𝗌 𝖺𝗇𝖽 𝗍𝗁𝖾𝗇 𝖼𝗅𝗂𝖼𝗄 𝗈𝗇 '↺𝖱𝖾𝖿𝗋𝖾𝗌h' 𝗍𝗈 𝗀𝖾𝗍 𝗒𝗈𝗎𝗋 Vid'𝗌",
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        return  # Stop execution if user is not in required channels
+        
     if len(message.command) != 2:
         buttons = [[
-            InlineKeyboardButton('💝 JOIN ANIME CHANNEL', url='https://t.me/chrunchyrool')
+            InlineKeyboardButton('💝 sᴜʙsᴄʀɪʙᴇ ᴍʏ ʏᴏᴜᴛᴜʙᴇ ᴄʜᴀɴɴᴇʟ', url='https://youtube.com/@PhdLust')
             ],[
-            InlineKeyboardButton('🔍 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url='https://t.me/+zlb3ReuJ40tjMDA1'),
-            InlineKeyboardButton('🤖 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/KGN_BOT_Z')
+            InlineKeyboardButton('🔍 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url='https://t.me/ultroidxTeam'),
+            InlineKeyboardButton('🤖 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/ultroid_official')
             ],[
             InlineKeyboardButton('💁‍♀️ ʜᴇʟᴘ', callback_data='help'),
             InlineKeyboardButton('😊 ᴀʙᴏᴜᴛ', callback_data='about')
@@ -331,9 +344,6 @@ async def base_site_handler(client, m: Message):
         await m.reply("<b>Base Site updated successfully</b>")
 
 
-
-
-
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
     if query.data == "close_data":
@@ -356,16 +366,13 @@ async def cb_handler(client: Client, query: CallbackQuery):
             parse_mode=enums.ParseMode.HTML
         )
 
-
-
-
     
     elif query.data == "start":
         buttons = [[
-            InlineKeyboardButton('💝 JOIN ANIME CHANNEL', url='https://t.me/chrunchyrool')
+            InlineKeyboardButton('💝 sᴜʙsᴄʀɪʙᴇ ᴍʏ ʏᴏᴜᴛᴜʙᴇ ᴄʜᴀɴɴᴇʟ', url='https://youtube.com/@Tech_VJ')
         ],[
-            InlineKeyboardButton('🔍 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url='https://t.me/+zlb3ReuJ40tjMDA1'),
-            InlineKeyboardButton('🤖 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/KGN_BOT_Z')
+            InlineKeyboardButton('🔍 sᴜᴘᴘᴏʀᴛ ɢʀᴏᴜᴘ', url='https://t.me/vj_bot_disscussion'),
+            InlineKeyboardButton('🤖 ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url='https://t.me/vj_botz')
         ],[
             InlineKeyboardButton('💁‍♀️ ʜᴇʟᴘ', callback_data='help'),
             InlineKeyboardButton('😊 ᴀʙᴏᴜᴛ', callback_data='about')
@@ -386,9 +393,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         )
 
 
-
-
-    
     elif query.data == "clone":
         buttons = [[
             InlineKeyboardButton('Hᴏᴍᴇ', callback_data='start'),
@@ -405,10 +409,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
         )          
-
-
-
-
     
     elif query.data == "help":
         buttons = [[
@@ -425,8 +425,73 @@ async def cb_handler(client: Client, query: CallbackQuery):
             text=script.HELP_TXT,
             reply_markup=reply_markup,
             parse_mode=enums.ParseMode.HTML
-        )  
+        )
+
+    elif data == "refresh_status":
+        # Refresh force subscription status
+        force_sub_channels = await get_force_sub_channels()
+        buttons = []
+        status_list = []
+
+        last_cmd = await database.cmd_data.find_one({"user_id": user_id}, {"last_cmd": 1})  # Fetch the last command from the database
+        last_cmd = last_cmd.get("last_cmd") if last_cmd else "default_cmd"  # Default value if no command is found
+
+        for i, channel_id in enumerate(force_sub_channels):
+            try:
+                invite_info = await channels_collection.find_one({"channel_id": channel_id})
+                invite_link = invite_info.get("invite_link") if invite_info else None
+                expires_at = invite_info.get("expires_at") if invite_info else None
+
+                if not invite_link or not expires_at or datetime.utcnow() > expires_at:
+                    new_invite_link = await client.export_chat_invite_link(channel_id)
+                    expires_in = timedelta(hours=1)
+                    expires_at = datetime.utcnow() + expires_in
+
+                    await channels_collection.update_one(
+                        {"channel_id": channel_id},
+                        {"$set": {"invite_link": new_invite_link, "expires_at": expires_at}},
+                        upsert=True,
+                    )
+                    invite_link = new_invite_link
+
+                try:
+                    member = await client.get_chat_member(chat_id=channel_id, user_id=user_id)
+                    if member.status in {ChatMemberStatus.OWNER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.MEMBER}:
+                        status_list.append(f"{i + 1}. Channel {i + 1} - ✅ Joined")
+                    else:
+                        status_list.append(f"{i + 1}. Channel {i + 1} - ❌ Not Joined")
+                        buttons.append(InlineKeyboardButton(f"Join Channel {i + 1}", url=invite_link))
+                except Exception:
+                    status_list.append(f"{i + 1}. Channel {i + 1} - ❌ Not Joined")
+                    buttons.append(InlineKeyboardButton(f"Join Channel {i + 1}", url=invite_link))
+            except Exception as e:
+                print(f"Error processing channel {channel_id}: {e}")
+                status_list.append(f"{i + 1}. Channel {i + 1} - ⚠️ Error")
+                buttons.append(InlineKeyboardButton(f"Error Help {i + 1}", url=f"https://t.me/{OWNER_USERNAME}"))
+
+        try:
+            # Add "Get File" button with last command
+            buttons.append(InlineKeyboardButton(
+                text="↺ Get File",
+                url=f"https://t.me/{client.username}?start={last_cmd}"
+            ))
+        except IndexError:
+            pass
+
+        keyboard = [buttons[i:i + 2] for i in range(0, len(buttons), 2)]
+        keyboard.append([InlineKeyboardButton("↺ Refresh", callback_data="refresh_status")])
+
+        # Removed conditional part and replaced it with a single caption
+        caption = FORCE_MSG.format(status_list="\n".join(status_list), mention=mention)
+
+        await query.message.edit_text(
+            text=caption,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            disable_web_page_preview=True
+        )
+        await query.answer("Status refreshed!", show_alert=True)
         
+    else:
+        await query.answer("Invalid action.", show_alert=True)
 
-
-
+        
