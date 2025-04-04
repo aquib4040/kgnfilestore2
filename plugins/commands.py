@@ -126,23 +126,20 @@ async def start(client, message):
     if data.split("-", 1)[0] == "verify":
         userid = data.split("-", 2)[1]
         token = data.split("-", 3)[2]
+        
         if str(message.from_user.id) != str(userid):
-            return await message.reply_text(
-                text="<b>Invalid link or Expired link !</b>",
-                protect_content=True
-            )
+            return await message.reply_text("<b>Invalid or expired link!</b>", protect_content=True)
+
         is_valid = await check_token(client, userid, token)
-        if is_valid == True:
-            await message.reply_text(
-                text=f"<b>Hey {message.from_user.mention}, You are successfully verified !\nNow you have unlimited access for all files till today midnight.</b>",
-                protect_content=True
-            )
+        
+        if is_valid:
             await verify_user(client, userid, token)
-        else:
             return await message.reply_text(
-                text="<b>Invalid link or Expired link !</b>",
+                f"<b>Hey {message.from_user.mention}, you are successfully verified!\nYou now have unlimited access for {(TOKENTIME / 3600):.2f} hours.</b>",
                 protect_content=True
             )
+        else:
+            return await message.reply_text("<b>Invalid or expired link!</b>", protect_content=True)
     elif data.split("-", 1)[0] == "BATCH":
         try:
             if not await check_verification(client, message.from_user.id) and VERIFY_MODE == True:
