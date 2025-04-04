@@ -42,6 +42,8 @@ CDB_NAME = environ.get("CDB_NAME", "")
 DB_URI = environ.get("DB_URI", "")
 DB_NAME = environ.get("DB_NAME", "")
 
+TOKENTIME = int(environ.get("TOKENTIME", "600")) # 1800 = 30 minutes
+
 # Auto Delete Information
 AUTO_DELETE_MODE = bool(environ.get('AUTO_DELETE_MODE', True)) # Set True or False
 
