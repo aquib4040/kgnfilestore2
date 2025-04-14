@@ -153,8 +153,7 @@ async def not_joined(client: Client, message: Message):
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text='↺ Get File',
-                    url=f"https://t.me/{client.username}?start={message.command[1]}"
+                    text='↺ Reopen Old Link To Get File'
                 )
             ]
         )
@@ -165,8 +164,7 @@ async def not_joined(client: Client, message: Message):
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text='↺ Get File',
-                    url=f"https://t.me/{client.username}?start={message.command[1]}"
+                    text='↺ Reopen Old Link To Get File'
                 )
             ]
         )
