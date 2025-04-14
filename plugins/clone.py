@@ -49,7 +49,7 @@ async def clone(client, message):
         mongo_db.bots.insert_one(details)
         await msg.edit_text(f"<b>sᴜᴄᴄᴇssғᴜʟʟʏ ᴄʟᴏɴᴇᴅ ʏᴏᴜʀ ʙᴏᴛ: @{bot.username}.</b>")
     except BaseException as e:
-        await msg.edit_text(f"⚠️ <b>Bot Error:</b>\n\n<code>{e}</code>\n\n**Kindly forward this message to ExE_AQUIB to get assistance.**")
+        await msg.edit_text(f"⚠️ <b>Bot Error:</b>\n\n<code>{e}</code>\n\n**Kindly forward this message to @ExE_AQUIB to get assistance.**")
 
 @Client.on_message(filters.command("deletecloned") & filters.private)
 async def delete_cloned_bot(client, message):
