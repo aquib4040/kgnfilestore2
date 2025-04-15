@@ -158,7 +158,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             try:
                 # Add "Get File" button with last command
                 buttons.append(InlineKeyboardButton(
-                    text="↺ Reopen Old Link To Get File"
+                    text="↺ Get File",
+                    url=f"https://t.me/{client.username}?start={last_cmd}"
                 ))
             except IndexError:
                 pass
