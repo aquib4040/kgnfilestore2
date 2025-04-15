@@ -164,7 +164,8 @@ async def not_joined(client: Client, message: Message):
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text='↺ Reopen Old Link To Get File'
+                    text="↺ Get File",
+                    url=f"https://t.me/{client.username}?start={last_cmd}"
                 )
             ]
         )
